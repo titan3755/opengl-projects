@@ -1,6 +1,9 @@
 // ogl
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 // std
 #include <iostream>
@@ -154,7 +157,14 @@ int main() {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
         }
-        glClearColor(0.5f, 0.5f, 0.8f, 1.0f);
+        int screenWidth, screenHeight;
+        glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
+        float aspect_ratio = (screenHeight == 0) ? 1.0f : (float)screenWidth / (float)screenHeight;
+        glm::mat4 projection = glm::ortho(-aspect_ratio, aspect_ratio, -1.0f, 1.0f, -1.0f, 1.0f);
+        shaderManager.use();
+        unsigned int projLoc = glGetUniformLocation(shaderManager.getShaderProgram(), "projection");
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        glClearColor(0.7f, 0.5f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         shaderManager.use();
         glBindVertexArray(VAO);
