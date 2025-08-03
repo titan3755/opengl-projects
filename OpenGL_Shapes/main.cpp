@@ -57,10 +57,10 @@ int main() {
 	// triangle, rectangle, and square vertices
     vertices = {
         // separator rectangle
-		-1.0f, 0.01f, 0.0f, 0.0f, 0.0f, 0.0f, // top left
-		1.0f, 0.01f, 0.0f, 0.0f, 0.0f, 0.0f, // top right
-		1.0f, -0.01f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom right
-		-1.0f, -0.01f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom left
+		-5.0f, 0.01f, 0.0f, 0.0f, 0.0f, 0.0f, // top left
+		5.0f, 0.01f, 0.0f, 0.0f, 0.0f, 0.0f, // top right
+		5.0f, -0.01f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom right
+		-5.0f, -0.01f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom left
         // first portion
         // triangle
 		-0.75f, 0.7f, 0.0f, 1.0f, 0.0f, 0.0f, // top vertex
@@ -78,7 +78,7 @@ int main() {
 		0.60f, 0.20f, 0.0f, 0.0f, 0.0f, 1.0f // bottom left
 		// end of first portion
 		// second portion will contain circle, pentagon, and hexagon
-		// second portions vertices will be generated dynamically
+		// second portions circle vertices will be generated dynamically
 	};
     indices = {
 		// separator rectangle indices
@@ -95,25 +95,19 @@ int main() {
 		11, 13, 14  // second triangle
 		// end of first portion indices
 		// second portion will contain circle, pentagon, and hexagon
-		// second portion indices will be generated dynamically
+		// second portion circle indices will be generated dynamically
     };
 
     // circle generator
-        // 1. Define circle properties
     const float cx = -0.6f;
     const float cy = -0.45f;
     const float radius = 0.25f;
     const int num_segments = 100;
 
-    // This is the starting index for the new vertices.
-    // We need this to correctly calculate the indices for the circle.
-    const unsigned int base_index = vertices.size() / 6; // 6 floats per vertex (3 pos, 3 color)
+    const unsigned int base_index = vertices.size() / 6;
 
-    // 2. Generate vertices
-    // Add the center vertex of the circle
-    vertices.insert(vertices.end(), { cx, cy, 0.0f, 1.0f, 1.0f, 0.0f }); // Position and Color (Yellow)
+    vertices.insert(vertices.end(), { cx, cy, 0.0f, 1.0f, 1.0f, 0.0f });
 
-    // Add the circumference vertices
     for (int i = 0; i <= num_segments; ++i) {
         float theta = 2.0f * 3.1415926f * float(i) / float(num_segments);
         float x = radius * cosf(theta);
@@ -121,12 +115,49 @@ int main() {
         vertices.insert(vertices.end(), { x + cx, y + cy, 0.0f, 1.0f, 1.0f, 0.0f });
     }
 
-    // 3. Generate indices
-    // Create triangles by connecting the center to the circumference vertices
     for (int i = 1; i <= num_segments; ++i) {
-        indices.push_back(base_index);      // Center vertex
+        indices.push_back(base_index);
         indices.push_back(base_index + i);
         indices.push_back(base_index + i + 1);
+    }
+
+    // pentagon and hexagon generation
+    const float pentagon_radius = 0.20f;
+    const float pentagon_center_x = 0.0f;
+    const float pentagon_center_y = -0.45f;
+    const int pentagon_sides = 5;
+    unsigned int pentagon_center_index = vertices.size() / 6;
+    vertices.insert(vertices.end(), { pentagon_center_x, pentagon_center_y, 0.0f, 0.5f, 0.0f, 1.0f }); // Dark Cyan color
+
+    for (int i = 0; i < pentagon_sides; ++i) {
+        float angle = 2.0f * 3.1415926f * float(i) / float(pentagon_sides) + (3.1415926f / 2.0f); // Offset to make it point up
+        float x = pentagon_radius * cosf(angle);
+        float y = pentagon_radius * sinf(angle);
+        vertices.insert(vertices.end(), { x + pentagon_center_x, y + pentagon_center_y, 0.0f, 0.5f, 0.0f, 1.0f });
+    }
+
+    for (int i = 1; i <= pentagon_sides; ++i) {
+        indices.push_back(pentagon_center_index);
+        indices.push_back(pentagon_center_index + i);
+        indices.push_back(pentagon_center_index + (i % pentagon_sides) + 1);
+    }
+
+    const float hexagon_radius = 0.20f;
+    const float hexagon_center_x = 0.5f;
+    const float hexagon_center_y = -0.45f;
+    const int hexagon_sides = 6;
+    unsigned int hexagon_center_index = vertices.size() / 6;
+    vertices.insert(vertices.end(), { hexagon_center_x, hexagon_center_y, 0.0f, 1.0f, 0.5f, 0.0f });
+    for (int i = 0; i < hexagon_sides; ++i) {
+        float angle = 2.0f * 3.1415926f * float(i) / float(hexagon_sides);
+        float x = hexagon_radius * cosf(angle);
+        float y = hexagon_radius * sinf(angle);
+        vertices.insert(vertices.end(), { x + hexagon_center_x, y + hexagon_center_y, 0.0f, 1.0f, 0.5f, 0.0f });
+    }
+    for (int i = 1; i <= hexagon_sides; ++i) {
+        indices.push_back(hexagon_center_index);
+        indices.push_back(hexagon_center_index + i);
+        indices.push_back(hexagon_center_index + (i % hexagon_sides) + 1);
     }
 
     unsigned int VBO, VAO, EBO;
