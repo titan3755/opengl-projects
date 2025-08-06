@@ -8,6 +8,7 @@
 
 // local
 #include <shader_manager.hpp>
+#include <log_manager.hpp>
 
 // img
 #define STB_IMAGE_IMPLEMENTATION
@@ -26,7 +27,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Scenery", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Wave", nullptr, nullptr);
     if (window == nullptr) {
         std::cerr << "GLFW window creation failed" << std::endl;
         glfwTerminate();
@@ -50,56 +51,18 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     std::vector<float> vertices = {
-        -1.0f, -1.0f, 0.5f,   1.0f, 1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
-         1.0f, -1.0f, 0.5f,   1.0f, 1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
-         1.0f,  1.0f, 0.5f,   1.0f, 1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
-        -1.0f,  1.0f, 0.5f,   1.0f, 1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
-        -0.8f, -0.4f, 0.0f,   1.0f, 1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
-        -0.2f, -0.4f, 0.0f,   1.0f, 1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
-        -0.2f,  0.4f, 0.0f,   1.0f, 1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
-        -0.8f,  0.4f, 0.0f,   1.0f, 1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
-         0.2f, -0.5f, 0.0f,   1.0f, 1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
-         0.7f, -0.5f, 0.0f,   1.0f, 1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
-         0.7f,  0.5f, 0.0f,   1.0f, 1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
-         0.2f,  0.5f, 0.0f,   1.0f, 1.0f, 1.0f, 1.0f,   0.0f, 1.0f
+		// simple quad covering the screen
+        // positions          // colors           // texture coords
+        -1.0f, -1.0f, 0.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+         1.0f, -1.0f, 0.0f,  1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+		 -1.0f, 1.0f, 0.0f,  1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
     };
 
     std::vector<unsigned int> indices = {
         0, 1, 2,
         2, 3, 0,
-        4, 5, 6,
-        6, 7, 4,
-        8, 9, 10,
-        10, 11, 8
     };
-
-    int bWidth, bHeight, bnrChannels;
-    unsigned char* brickData = stbi_load("assets/red_brick_diff_4k.jpg", &bWidth, &bHeight, &bnrChannels, 0);
-    unsigned int brickTexture;
-    glGenTextures(1, &brickTexture);
-    glBindTexture(GL_TEXTURE_2D, brickTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, bWidth, bHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, brickData);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(brickData);
-
-    int wWidth, wHeight, wnrChannels;
-    unsigned char* woodData = stbi_load("assets/wooden_garage_door_diff_4k.jpg", &wWidth, &wHeight, &wnrChannels, 0);
-    unsigned int woodTexture;
-    glGenTextures(1, &woodTexture);
-    glBindTexture(GL_TEXTURE_2D, woodTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wWidth, wHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, woodData);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(woodData);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -119,25 +82,38 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    std::cout << "OpenGL Scenery initialized successfully!" << std::endl;
+	LogManager logManager("OpenGL Wave");
+	logManager.introLog();
+	logManager.getLog();
+	logManager.printLog();
+
+	shaderManager.use();
+    int freqXLocation = glGetUniformLocation(shaderManager.getShaderProgram(), "freq_x");
+    int freqYLocation = glGetUniformLocation(shaderManager.getShaderProgram(), "freq_y");
+    glUniform1f(freqXLocation, 20.0f);
+    glUniform1f(freqYLocation, 20.0f);
 
     while (!glfwWindowShouldClose(window)) {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
         }
 
+        float currentTime = glfwGetTime();
+        int timeLocation = glGetUniformLocation(shaderManager.getShaderProgram(), "u_time");
+        glUniform1f(timeLocation, currentTime);
+
+		// change frequency based on time
+		float freqX = 20.0f + 10.0f * sin(currentTime) * 20.0f;
+		float freqY = 20.0f + 10.0f * cos(currentTime) * 20.0f;
+		glUniform1f(freqXLocation, freqX);
+		glUniform1f(freqYLocation, freqY);
+
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shaderManager.use();
         glBindVertexArray(VAO);
-
-        glBindTexture(GL_TEXTURE_2D, brickTexture);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
-        glBindTexture(GL_TEXTURE_2D, woodTexture);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(6 * sizeof(unsigned int)));
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(12 * sizeof(unsigned int)));
-
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
