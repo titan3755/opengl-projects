@@ -16,6 +16,7 @@
 
 const int WIDTH = 1280;
 const int HEIGHT = 720;
+const char* WINDOW_TITLE = "OpenGL Transformations";
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -27,7 +28,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Wave", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, WINDOW_TITLE, nullptr, nullptr);
     if (window == nullptr) {
         std::cerr << "GLFW window creation failed" << std::endl;
         glfwTerminate();
@@ -46,17 +47,17 @@ int main() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    ShaderManager shaderManager("shaders/vertex.glsl", "shaders/fragment.glsl");
+    ShaderManager shaderManager("shaders/vertex.vert", "shaders/fragment.frag");
     glViewport(0, 0, WIDTH, HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     std::vector<float> vertices = {
 		// simple quad covering the screen
-        // positions          // colors           // texture coords
-        -1.0f, -1.0f, 0.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-         1.0f, -1.0f, 0.0f,  1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-		 1.0f,  1.0f, 0.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-		 -1.0f, 1.0f, 0.0f,  1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+         // positions         // colors               // texture coords
+         -1.0f, -1.0f, 0.0f,  1.0f, 0.7f, 0.0f, 1.0f, 0.0f, 0.0f,
+         1.0f, -1.0f, 0.0f,   1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f,   1.0f, 0.9f, 1.0f, 1.0f, 1.0f, 1.0f,
+		 -1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 0.3f, 1.0f, 0.0f, 1.0f,
     };
 
     std::vector<unsigned int> indices = {
@@ -82,35 +83,20 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-	LogManager logManager("OpenGL Wave");
+	LogManager logManager(WINDOW_TITLE);
 	logManager.introLog();
 	logManager.getLog();
 	logManager.printLog();
 
 	shaderManager.use();
-    int freqXLocation = glGetUniformLocation(shaderManager.getShaderProgram(), "freq_x");
-    int freqYLocation = glGetUniformLocation(shaderManager.getShaderProgram(), "freq_y");
-    glUniform1f(freqXLocation, 20.0f);
-    glUniform1f(freqYLocation, 20.0f);
 
     while (!glfwWindowShouldClose(window)) {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
         }
 
-        float currentTime = glfwGetTime();
-        int timeLocation = glGetUniformLocation(shaderManager.getShaderProgram(), "u_time");
-        glUniform1f(timeLocation, currentTime);
-
-		// change frequency based on time
-		float freqX = 20.0f + 10.0f * sin(currentTime) * 20.0f;
-		float freqY = 20.0f + 10.0f * cos(currentTime) * 20.0f;
-		glUniform1f(freqXLocation, freqX);
-		glUniform1f(freqYLocation, freqY);
-
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         shaderManager.use();
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
