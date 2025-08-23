@@ -1,6 +1,9 @@
 // ogl
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 // std
 #include <iostream>
@@ -54,10 +57,10 @@ int main() {
     std::vector<float> vertices = {
 		// simple quad covering the screen
          // positions         // colors               // texture coords
-         -1.0f, -1.0f, 0.0f,  1.0f, 0.7f, 0.0f, 1.0f, 0.0f, 0.0f,
-         1.0f, -1.0f, 0.0f,   1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-		 1.0f,  1.0f, 0.0f,   1.0f, 0.9f, 1.0f, 1.0f, 1.0f, 1.0f,
-		 -1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 0.3f, 1.0f, 0.0f, 1.0f,
+         -1.0f, -1.0f, 0.0f,  0.6f, 0.7f, 0.0f, 1.0f, 0.0f, 0.0f,
+         1.0f, -1.0f, 0.0f,   0.6f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f,   0.7f, 0.9f, 1.0f, 1.0f, 1.0f, 1.0f,
+		 -1.0f, 1.0f, 0.0f,   0.8f, 1.0f, 0.3f, 1.0f, 0.0f, 1.0f,
     };
 
     std::vector<unsigned int> indices = {
@@ -82,6 +85,14 @@ int main() {
     glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    glm::mat4 trans = glm::mat4(1.0f);
+    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
+    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+	shaderManager.loadShaders();
+    shaderManager.use();
+    unsigned int transformLoc = glGetUniformLocation(shaderManager.getShaderProgram(), "transform");
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
 	LogManager logManager(WINDOW_TITLE);
 	logManager.introLog();
