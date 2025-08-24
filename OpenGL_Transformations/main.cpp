@@ -106,6 +106,10 @@ int main() {
             glfwSetWindowShouldClose(window, true);
         }
 
+        // ROTATE
+		trans = glm::rotate(trans, (float)glfwGetTime() * glm::radians(50.0f) * 0.01f, glm::vec3(0.0, 0.0, 1.0));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shaderManager.use();
