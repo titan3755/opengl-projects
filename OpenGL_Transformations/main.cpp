@@ -17,8 +17,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <img/stb_image.h>
 
-const int WIDTH = 1280;
-const int HEIGHT = 720;
+const int WIDTH = 800;
+const int HEIGHT = 800;
 const char* WINDOW_TITLE = "OpenGL Transformations";
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -55,17 +55,16 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     std::vector<float> vertices = {
-		// simple quad covering the screen
-         // positions         // colors               // texture coords
-         -1.0f, -1.0f, 0.0f,  0.6f, 0.7f, 0.0f, 1.0f, 0.0f, 0.0f,
-         1.0f, -1.0f, 0.0f,   0.6f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-		 1.0f,  1.0f, 0.0f,   0.7f, 0.9f, 1.0f, 1.0f, 1.0f, 1.0f,
-		 -1.0f, 1.0f, 0.0f,   0.8f, 1.0f, 0.3f, 1.0f, 0.0f, 1.0f,
+        // Positions          // Colors             // Texture Coords
+        -0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f, 1.0f,   1.0f, 0.0f,
+         0.5f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f, 1.0f,   1.0f, 1.0f,
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f, 1.0f,   0.0f, 1.0f
     };
 
     std::vector<unsigned int> indices = {
         0, 1, 2,
-        2, 3, 0,
+        2, 3, 0
     };
 
     unsigned int VBO, VAO, EBO;
@@ -86,13 +85,18 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    glm::mat4 trans = glm::mat4(1.0f);
-    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
-	shaderManager.loadShaders();
+    glm::vec3 waypoints[] = {
+        glm::vec3(-0.75f,  0.75f, 0.0f), // 0: Top-left
+        glm::vec3(0.75f,  0.75f, 0.0f), // 1: Top-right
+        glm::vec3(0.75f, -0.75f, 0.0f), // 2: Bottom-right
+        glm::vec3(-0.75f, -0.75f, 0.0f)  // 3: Bottom-left
+    };
+
+    const float animationDuration = 2.0f;
+
+    shaderManager.loadShaders();
     shaderManager.use();
     unsigned int transformLoc = glGetUniformLocation(shaderManager.getShaderProgram(), "transform");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
 	LogManager logManager(WINDOW_TITLE);
 	logManager.introLog();
@@ -106,15 +110,27 @@ int main() {
             glfwSetWindowShouldClose(window, true);
         }
 
-        // ROTATE
-		trans = glm::rotate(trans, (float)glfwGetTime() * glm::radians(50.0f) * 0.01f, glm::vec3(0.0, 0.0, 1.0));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         shaderManager.use();
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+        float time = glfwGetTime();
+        float progress = fmod(time, animationDuration) / animationDuration;
+
+        for (int i = 0; i < 4; i++) {
+            glm::vec3 startPos = waypoints[i];
+            glm::vec3 endPos = waypoints[(i + 1) % 4];
+            glm::vec3 currentPos = glm::mix(startPos, endPos, progress);
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, currentPos);
+            float angle = time * glm::radians(90.0f);
+            model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+            model = glm::scale(model, glm::vec3(0.25, 0.25, 0.25));
+            glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model));
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        }
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
